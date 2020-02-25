@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright 2019 Davi Villalva (Danilo). <danilo.davilla@gmail.com>
+  
+  You may use it however you like.
+  
+-->
+<style-scheme id="rust-style" _name="Rust Style" version="1.0">
+  <author>Davi Villalva (Danilo)</author>
+  <_description>Color scheme that is based on Rust Docs aesthetics</_description>
+  
+  <!-- Palette -->
+  <color name="white"                value="#ffffff"/>
+  <color name="black"                value="#000000"/>
+  <color name="orange"               value="#ff9011"/>
+  <color name="light-red"            value="#c82829"/>
+  <color name="purple"               value="#8959a8"/>
+  <color name="light-green"          value="#718c00"/>
+  <color name="cyan"                 value="#4271ae"/>
+  <color name="light-cyan"           value="#3e999f"/>
+  <color name="brown"                value="#c67e2d"/>
+  <color name="gray"                 value="#4d4d4c"/>
+  <color name="light-gray"           value="#f5f5f5"/>
+  <color name="lighter-gray"         value="#fbfbfb"/>
+  <color name="dark-brown"           value="#b76514"/>
+  
+  <!-- Global -->
+  <style name="text"                 foreground="black" background="light-gray"/>
+  <style name="cursor"               foreground="black"/>
+  <style name="line-numbers"         foreground="brown" background="light-gray"/>
+  <style name="current-line"         background="lighter-gray"/>
+  
+  <!-- Defaults -->
+  <style name="def:operator"         foreground="black"/>
+  <style name="def:keyword"          foreground="purple"/>
+  <style name="def:preprocessor"     foreground="light-cyan"/>
+  <style name="def:number"           foreground="light-green"/>
+  <style name="def:character"        foreground="light-green"/>
+  <style name="def:string"           foreground="light-green"/>
+  <style name="def:comment"          foreground="gray"/>
+  <style name="def:error"            foreground="white" background="light-red"/>
+  
+  <!-- Rust Specific -->
+  <style name="rust:mut-ref"         foreground="cyan"/>
+  <style name="rust:nsized-operator" foreground="orange"/>
+  <style name="rust:ref-operator"    foreground="cyan"/>
+  <style name="rust:ptr-operator"    foreground="cyan"/>
+  <style name="rust:const-ptr"       foreground="cyan"/>
+  <style name="rust:self"            foreground="light-red"/>
+  <style name="rust:builtin"         foreground="black"/>
+  <style name="rust:lifetime"        foreground="dark-brown"/>
+  <style name="rust:macro"           foreground="light-cyan"/>
+  <style name="rust:scope"           foreground="black"/>
+  <style name="rust:scope-operator"  foreground="black"/>
+  <style name="rust:attribute"       foreground="light-red"/>
+  
+
+</style-scheme>
