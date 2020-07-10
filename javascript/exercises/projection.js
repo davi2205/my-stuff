@@ -3,7 +3,7 @@
 
     Exercício de projeção em perspectiva.
 
-    Autor: Danilo.
+      Autor: Davi Villalva
         Ano: 2019
 
 */
