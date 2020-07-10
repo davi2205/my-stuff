@@ -2,7 +2,7 @@
 '''
 
     Blockbreaker Básico em Pygame
-    Autor: Davi V. Martins (Danilo da Villa)
+    Autor: Davi Villalva
      Data: 2018
      Nota: Provavelmente vou misturar inglês com português nessa bagaça por força do hábito.
            Esta implementação não está nem um pouco otimizada e nem pretendo otimizar.
