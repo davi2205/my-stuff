@@ -4,7 +4,7 @@ import re
 #
 #       Rust symbol demangler
 #
-#       Author: Davi Villalva (a.k.a. Danilo)
+#       Author: Davi Villalva
 #         Year: 2020
 #         Desc: Name demangling utility
 #
