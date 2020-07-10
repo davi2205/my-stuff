@@ -13,7 +13,7 @@ from mathutils import Matrix, Vector
 #   This function creates invisible objects used for 3d clipping
 #   around other objects.
 #
-#   root - The bpy.types.Object where the clip objects will be placed/updated.
+#   root - The bpy.types.Object where the clip objects will be placed/updated. (as children objects)
 #   objs - The bpy.types.Object-s the clips will surround.
 # config - A dictionary that specifies which clip objects the 'objs' should have.
 #          If config is empty, all existing clip objects will be deleted.
