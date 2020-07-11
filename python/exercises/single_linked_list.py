@@ -3,7 +3,7 @@
 #  | Single linked list |
 #  +--------------------+
 #
-#  Author: Davi Villalva Martins (a.k.a. Danilo da Villa)
+#  Author: Davi Villalva
 #    Year: 2019
 #
 #  Even though I've known this data structure for ages, I decided
