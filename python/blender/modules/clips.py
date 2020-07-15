@@ -3,6 +3,7 @@ import sys
 import bpy
 import bmesh
 
+from uuid import uuid4
 from copy import copy
 from bpy import types
 from mathutils import Matrix, Vector
@@ -33,10 +34,10 @@ def set_clips(root, objs, config):
     if len(objs) == 0:
         return
 
-    # Get some floating point info.
+    # Some floating point info.
     fp_info = sys.float_info
 
-    # Get the surroundings of the objects.
+    # Computing the surroundings of the objects.
     mi = [fp_info.max] * 3
     ma = [fp_info.min] * 3
     for obj in objs:
@@ -46,10 +47,91 @@ def set_clips(root, objs, config):
             ma[0], ma[1], ma[2] = max(x, ma[0]), max(y, ma[1]), max(z, ma[2])
     size = [ma[0] - mi[0], ma[1] - mi[1], ma[2] - mi[2]]
 
+    def get_or_insert(predicate, iterable, insert_fn):
+        try:
+            return next(filter(predicate, iterable))
+        except StopIteration:
+            return insert_fn()
+    
+    def remove_all(predicate, iterable, remove_fn):
+        for i in list(filter(predicate, iterable)):
+            remove_fn(i)
+
+    def find(predicate, iterable):
+        return next(filter(predicate, iterable), None)
+    
+    def new_clip_obj(axis_name):
+        obj_name = f'{root.name}{axis_name.replace("-", "Minus")}Clip'
+        mesh = bpy.data.meshes.new(obj_name)
+        bm = bmesh.new()
+
+        bm.from_mesh(mesh)
+        bmesh.ops.create_cube(bm, size=2.0)
+        bm.to_mesh(mesh)
+        bm.free()
+
+        clip_obj = bpy.data.objects.new(obj_name, object_data=mesh)
+        clip_obj.parent = root
+        clip_obj.hide_render = True
+        clip_obj.display_type = 'WIRE'
+        clip_obj['ClipAxis'] = axis_name
+
+        bpy.context.collection.objects.link(clip_obj)
+
+        return clip_obj
+    
+    def remove_clip_obj(clip_obj):
+        for obj in filter(lambda o: o.type == 'MESH', root.children):
+            remove_all(                                                 \
+                lambda m: m.type == 'BOOLEAN' and m.object is clip_obj, \
+                    obj.modifiers,                                      \
+                        lambda m: obj.modifiers.remove(m))
+
+        bpy.data.objects.remove(clip_obj)
+    
+    def new_mesh_obj_from(obj):
+        try:
+            mesh = obj.to_mesh().copy()
+            obj.to_mesh_clear()
+
+            uuid = str(f'{obj.name_full}_{uuid4()}')
+
+            obj['Link'] = uuid 
+
+            mesh_obj = bpy.data.objects.new(f'{obj.name}Mesh', object_data=mesh)
+            mesh_obj.parent = root
+            mesh_obj['Link'] = uuid
+            mesh_obj['IsGeneratedMesh'] = True
+
+            bpy.context.collection.objects.link(mesh_obj)
+            
+            return mesh_obj
+        except Exception as e:
+            print(repr(e))
+            return None
+
+    def copy_animation_data(_from, to):
+        from_data = _from.animation_data 
+
+        if from_data is None:
+            return
+
+        props = list(p.identifier \
+            for p in from_data.bl_rna.properties if not p.is_readonly)
+        
+        to_data = to.animation_data
+
+        if to_data is None:
+            to.animation_data_create()
+            to_data = to.animation_data
+
+        for prop in props:
+            setattr(to_data, prop, getattr(from_data, prop))
+
     clip_obj_by_axis_name = {}
 
     for axis_name, settings in config.items():
-        # Get axis from key.
+        # Computing the axis from key.
         axis = None
 
         if axis_name == 'X':
@@ -111,58 +193,58 @@ def set_clips(root, objs, config):
             (      0.0,       0.0,       0.0,       1.0),
         ])
 
-        # Creating/Updating clip object.
-        clip_obj = next(filter( \
-            lambda c: c.get('ClipAxis') == axis_name, root.children), None)
-
-        if clip_obj is None:
-            obj_name = f'{root.name}{axis_name.replace("-", "Minus")}Clip'
-            mesh = bpy.data.meshes.new(obj_name)
-            bm = bmesh.new()
-
-            bm.from_mesh(mesh)
-            bmesh.ops.create_cube(bm, size=2.0)
-            bm.to_mesh(mesh)
-            bm.free()
-
-            clip_obj = bpy.data.objects.new(obj_name, object_data=mesh)
-            clip_obj.parent = root
-            clip_obj.hide_render = True
-            clip_obj.display_type = 'WIRE'
-            clip_obj['ClipAxis'] = axis_name
-
-            bpy.context.collection.objects.link(clip_obj)
+        # Getting or inserting clip object.
+        clip_obj = get_or_insert(                     \
+            lambda c: c.get('ClipAxis') == axis_name, \
+                root.children,                        \
+                    lambda: new_clip_obj(axis_name))
         
         # Setting the world matrix.
         clip_obj.matrix_world = mat
 
-        # Map clip object.
+        # Mapping the clip object.
         clip_obj_by_axis_name[axis_name] = clip_obj
 
     to_exclude = {'X', '-X', 'Y', '-Y', 'Z', '-Z'} - set(config.keys())
 
     # Excluding unnecessary clip objs.
-    for clip_obj in filter( \
-        lambda o: o.get('ClipAxis') in to_exclude, root.children):
+    remove_all(                                    \
+        lambda o: o.get('ClipAxis') in to_exclude, \
+            root.children,                         \
+                remove_clip_obj)
 
-        # Make sure the corresponding modifiers are deleted as well.
-        for obj in filter(lambda o: o.type == 'MESH', objs):
-            for modifier in list(filter( \
-                lambda m: m.type == 'BOOLEAN' \
-                    and m.object is clip_obj, obj.modifiers)):
-                obj.modifiers.remove(modifier)    
-
-        bpy.data.objects.remove(clip_obj)
-    
-    # Add/Update existing clip objs modifiers.
+    # Adding/Updating existing clip objs modifiers.
     for axis_name, clip_obj in clip_obj_by_axis_name.items():
-        for obj in filter(lambda o: o.type == 'MESH', objs):
-            modifier = next(filter( \
-                lambda m: m.object is not None \
-                    and m.object.get('ClipAxis', None) == axis_name, \
-                        obj.modifiers), None)
+        for obj in objs:
+            if obj.get('IsGeneratedMesh'):
+                continue
 
-            if modifier is None:
-                modifier = obj.modifiers.new('', 'BOOLEAN')
+            # Attempting to generate a new mesh from non mesh object.
+            if obj.type != 'MESH':
+                old_mesh_obj = find(                                \
+                    lambda o: o.get('IsGeneratedMesh')              \
+                              and o.get('Link') == obj.get('Link'), \
+                            root.children)
+
+                mesh_obj = new_mesh_obj_from(obj)
+
+                if mesh_obj is None:
+                    continue
+
+                if old_mesh_obj is not None:
+                    copy_animation_data(old_mesh_obj, mesh_obj)  
+                    bpy.data.objects.remove(old_mesh_obj)  
+
+                obj = mesh_obj
+
+            # Getting or inserting the modifier.
+            modifier = get_or_insert(                                \
+                lambda m: m.type == 'BOOLEAN'                        \
+                          and m.object is not None                   \
+                          and m.object.get('ClipAxis') == axis_name, \
+                            obj.modifiers,                           \
+                                lambda: obj.modifiers.new('', 'BOOLEAN'))
             
             modifier.object = clip_obj
+
+    
