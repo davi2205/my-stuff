@@ -94,7 +94,7 @@ def set_clips(root, objs, config):
             mesh = obj.to_mesh().copy()
             obj.to_mesh_clear()
 
-            uuid = str(f'{obj.name_full}_{uuid4()}')
+            uuid = f'{obj.name_full}_{uuid4()}'
 
             obj['Link'] = uuid 
 
