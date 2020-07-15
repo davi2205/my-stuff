@@ -5,7 +5,6 @@ import bmesh
 
 from uuid import uuid4
 from copy import copy
-from bpy import types
 from mathutils import Matrix, Vector
 
 #
@@ -88,27 +87,34 @@ def set_clips(root, objs, config):
                         lambda m: obj.modifiers.remove(m))
 
         bpy.data.objects.remove(clip_obj)
-    
-    def new_mesh_obj_from(obj):
+
+    def mesh_from_obj(obj):
         try:
             mesh = obj.to_mesh().copy()
             obj.to_mesh_clear()
 
-            uuid = f'{obj.name_full}_{uuid4()}'
-
-            obj['Link'] = uuid 
-
-            mesh_obj = bpy.data.objects.new(f'{obj.name}Mesh', object_data=mesh)
-            mesh_obj.parent = root
-            mesh_obj['Link'] = uuid
-            mesh_obj['IsGeneratedMesh'] = True
-
-            bpy.context.collection.objects.link(mesh_obj)
-            
-            return mesh_obj
-        except Exception as e:
-            print(repr(e))
+            return mesh
+        except Exception:
             return None
+    
+    def new_mesh_obj_from(obj):
+        mesh = mesh_from_obj(obj)
+
+        if mesh is None:
+            return None
+
+        uuid = f'{obj.name_full}_{uuid4()}'
+
+        obj['Link'] = uuid 
+
+        mesh_obj = bpy.data.objects.new(f'{obj.name}Mesh', object_data=mesh)
+        mesh_obj.parent = root
+        mesh_obj['Link'] = uuid
+        mesh_obj['IsGeneratedMesh'] = True
+
+        bpy.context.collection.objects.link(mesh_obj)
+        
+        return mesh_obj
 
     def copy_animation_data(_from, to):
         from_data = _from.animation_data 
@@ -246,5 +252,3 @@ def set_clips(root, objs, config):
                                 lambda: obj.modifiers.new('', 'BOOLEAN'))
             
             modifier.object = clip_obj
-
-    
