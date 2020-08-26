@@ -29,6 +29,8 @@ fonte_padrao = pygame.font.SysFont("Comic Sans MS", 16)
 cor_fundo    = (  0,   0,   0)
 cor_padrao   = (255, 255, 255)
 
+# Quanto maior o índice do tijolo na lista, maior a quantidade de vezes que é preciso
+# bater nele para quebrar (é a 'vida' do tijolo)
 cores_tijolo = [
     (255,   0,  0), # tijolo com vida 1
     (255,  50,  0), # tijolo com vida 2
@@ -38,6 +40,7 @@ cores_tijolo = [
     (255, 255,  0)  # tijolo com vida 6
 ]
 
+# Cada elemento desta matriz corresponde a um índice da lista 'cores_tijolo'
 mapa         = [
     [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
     [ 0, 6, 6, 6, 6, 6, 6, 6, 0 ],
