@@ -28,6 +28,82 @@ from mathutils import Matrix, Vector
 #        }
 #
 
+def _set_clips(root, objs, config):
+    
+    def pick_best(criteria, iterable):
+        max_score = len(criteria)
+
+        pick = None
+        pick_score = -1
+        pick_criteria = tuple()
+
+        for i in iterable:
+            i_criteria = tuple(c for c, f in criteria.items() if f(i))
+            i_score = len(i_criteria)
+
+            if i_score == max_score:
+                return (i, i_criteria)
+            elif i_score > pick_score:
+                pick = i
+                pick_score = i_score
+                pick_criteria = i_criteria
+
+        return (pick, pick_criteria)
+    
+    def remove_all(predicate, iterable, remove_fn):
+        for i in list(filter(predicate, iterable)):
+            remove_fn(i)
+
+    # Clip obj
+
+    def clip_obj_new(axis_name):
+        obj_name = f'{root.name}{axis_name.replace("-", "Minus")}Clip'
+
+        mesh = bpy.data.meshes.new(obj_name)
+        bm = bmesh.new()
+
+        bm.from_mesh(mesh)
+        bmesh.ops.create_cube(bm, size=2.0)
+        bm.to_mesh(mesh)
+        bm.free()
+
+        clip_obj = bpy.data.objects.new(obj_name, object_data=mesh)
+        clip_obj.parent = root
+        clip_obj['ClipAxis'] = axis_name
+
+        bpy.context.collection.objects.link(clip_obj)
+
+        return clip_obj
+                
+    def clip_obj_get_color(clip_obj):
+        pass
+
+    def clip_obj_set_color(clip_obj, color):
+        #clip_obj.hide_render = True
+        #clip_obj.display_type = 'WIRE'
+        pass
+
+    def clip_obj_remove_dependencies(clip_obj):
+        for obj in filter(lambda o: o.type == 'MESH', root.children):
+            remove_all(
+                lambda m: m.type == 'BOOLEAN' and m.object is clip_obj,
+                    obj.modifiers,
+                        obj.modifiers.remove)
+
+
+    # End clip obj
+
+    EXPECTED_AXIS = 0
+    EXPECTED_MATERIAL = 1
+
+    available_clip_objs = [o for o in root.children if o.get('ClipAxis')]
+
+
+#_set_clips(bpy.context.object, None, None)
+
+def set_background_material(obj):
+    obj.data.at
+
 def set_clips(root, objs, config):
     # No objects, nothing to do.
     if len(objs) == 0:
@@ -109,6 +185,7 @@ def set_clips(root, objs, config):
 
         mesh_obj = bpy.data.objects.new(f'{obj.name}Mesh', object_data=mesh)
         mesh_obj.parent = root
+        mesh_obj.matrix_world = obj.matrix_world
         mesh_obj['Link'] = uuid
         mesh_obj['IsGeneratedMesh'] = True
 
